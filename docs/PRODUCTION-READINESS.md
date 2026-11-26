@@ -1,4 +1,4 @@
-# SND Noturno — preparação para uso institucional (V3.4)
+# SND Noturno — preparação para uso institucional (V4.0 — edição local)
 ## Escopo
 Aplicativo de apoio à rotina operacional do SND noturno, 19h–07h. Não substitui prontuário, protocolos assistenciais, passagem formal ou decisões da equipe. A versão pública é local, sem autenticação ou sincronização. Não registrar informações identificáveis de pacientes. Não utilizar dados reais em testes públicos.
 ## Operação
