@@ -12,9 +12,15 @@ const saved="loadedRaw=raw;saveFailed=false;",restored="loadedRaw=raw;blocked=fa
 if(!engine.includes(saved)||!engine.includes(restored))throw Error('Persistência incompatível');
 engine=engine.replace(saved,saved+"journalCheckpoint(raw);").replace(restored,restored+"journalCheckpoint(raw);");
 engine="import {checkpoint,history} from './local-journal';\nimport {prevention} from './prevention.mjs';\nimport {encryptBackup,decryptBackup,digest} from './crypto-backup.mjs';\n"+engine;
-engine=engine.replaceAll('V2.1','V3.2');
+engine=engine.replaceAll('V2.1','V3.3');
 if(!engine.includes('let x=JSON.parse(await el.files[0].text());'))throw Error('Importação incompatível');
 engine=engine.replace('let x=JSON.parse(await el.files[0].text());','let x=JSON.parse(await el.files[0].text());if(x?.format===\'snd-backup-encrypted-v1\'){if(d.mode===\'importStaff\')throw Error(\'Use Restaurar backup.\');let password=prompt(\'Senha do backup criptografado:\');if(password===null)return;x=JSON.parse(await decryptBackup(x,password));}');
+const storageHook="refreshSaveState()}});function migrateSchedule18";
+if(!engine.includes(storageHook))throw Error('Conflito de gravação incompatível');
+engine=engine.replace(storageHook,"refreshSaveState();publishCockpit();publishManagement()}});function migrateSchedule18");
+const initialRender="migrateSchedule18();render();setInterval";
+if(!engine.includes(initialRender))throw Error('Inicialização incompatível');
+engine=engine.replace(initialRender,"if(!blocked){try{if(!validBackup(db))throw Error('Histórico inválido')}catch{db=initial();blocked=true;saveFailed=true;$('notice').textContent='Histórico inválido. Gravação bloqueada; exporte o registro original em Gestão.'}}migrateSchedule18();render();setInterval");
 engine+=`
 function publishManagement(){if(tab!=='gestao')return;let today=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());let part=k=>today.find(p=>p.type===k).value;window.dispatchEvent(new CustomEvent('snd-management',{detail:{today:part('year')+'-'+part('month')+'-'+part('day'),blocked:blocked||saveFailed,rows:Object.values(db.shifts).filter(s=>deadline(s.date,'07:00')<=Date.now()&&recordedShift(s)).map(s=>({date:s.date,...shiftMetrics(s),tasks:(s.tasks||[]).map(t=>({id:t.id,title:t.title,late:t.status==='done'&&Number.isFinite(Date.parse(t.completed))&&Date.parse(t.completed)>deadline(s.date,t.time),open:t.status!=='done',incident:t.status==='pending'||(t.events||[]).some(e=>e.kind==='pending')}))}))}}))}
 window.addEventListener('snd-management-request',publishManagement);
