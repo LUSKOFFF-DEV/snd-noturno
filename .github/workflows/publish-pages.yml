@@ -1,0 +1,57 @@
+name: Publish SND Noturno
+on:
+  workflow_dispatch:
+    inputs:
+      release:
+        description: Version to publish
+        required: true
+        type: choice
+        default: modern
+        options:
+          - modern
+          - legacy
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: false
+jobs:
+  build:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - if: inputs.release == 'modern'
+        working-directory: modern
+        run: |
+          npm install --no-audit --no-fund
+          npm run build
+          npx playwright install --with-deps chromium
+          node smoke.mjs
+      - if: inputs.release == 'modern'
+        run: cp -R modern/dist site
+      - if: inputs.release == 'legacy'
+        run: |
+          mkdir site
+          cp index.html sw.js manifest.json icon.svg icon-192.png icon-512.png site/
+      - run: touch site/.nojekyll
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
