@@ -10,3 +10,6 @@ Leitura de snd_shifts por unidade e data retorna payload e revision. RPC snd_wri
 - Implementar login, sessão, fila IndexedDB por usuário/unidade, reenvio idempotente, reconciliação e isolamento de dados em dispositivos compartilhados. Não armazenar senha ou chave de serviço no frontend. Não usar a chave service_role no navegador.
 - Verificar aprovação institucional, segurança e privacidade antes de transmitir nomes ou informações operacionais. Não incluir informações identificáveis de pacientes.
 - Testar offline, expiração da sessão, revogação, concorrência e recuperação. A interface V2.7 segue local e independente.
+
+## V3.0.2 — acesso experimental
+Configure VITE_SND_AUTH_URL (origem HTTPS aprovada) e VITE_SND_PUBLIC_KEY (chave sb_publishable_) no ambiente de build de homologação. Sem ambos, o painel fica desativado. A sessão mantém somente o token de acesso em memória, sem renovação automática; expira ou é descartada ao recarregar ou sair. Encerrar sessão local não revoga o token no servidor. Nenhum plantão é enviado e o login não protege os registros locais. Não ativar antes da homologação de Auth, RLS, expiração, revogação e política de dispositivos compartilhados.
