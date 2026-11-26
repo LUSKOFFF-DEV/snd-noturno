@@ -2,7 +2,7 @@ import {useState,useRef,useEffect} from 'react';
 type Config={url:string;key:string};
 type Membership={unit_id:string;role:string};
 const env=(import.meta as unknown as {env:Record<string,string|undefined>}).env;
-function config():Config|null{const url=env.VITE_SND_AUTH_URL,key=env.VITE_SND_PUBLIC_KEY;if(!url||!key||!key.startsWith('sb_publishable_'))return null;try{const u=new URL(url);if(u.protocol!=='https:'||u.username||u.password||u.pathname!=='/'||u.search||u.hash)return null;return {url:u.origin,key}}catch{return null}}
+function config():Config|null{if(env.VITE_SND_CONNECTED_EXPERIMENT!=='true')return null;const url=env.VITE_SND_AUTH_URL,key=env.VITE_SND_PUBLIC_KEY;if(!url||!key||!key.startsWith('sb_publishable_'))return null;try{const u=new URL(url);if(u.protocol!=='https:'||u.username||u.password||u.pathname!=='/'||u.search||u.hash)return null;return {url:u.origin,key}}catch{return null}}
 const cfg=config();
 async function request(path:string,options:RequestInit={},token?:string){if(!cfg)throw Error('Servidor não configurado.');const r=await fetch(cfg.url+path,{...options,cache:'no-store',redirect:'error',credentials:'omit',headers:{apikey:cfg.key,'Content-Type':'application/json',...(token?{Authorization:'Bearer '+token}:{})}});if(!r.ok)throw Error('Não foi possível concluir a autenticação ou consultar o acesso.');return r.json()}
 export function ConnectedAuth(){const [email,setEmail]=useState(''),[password,setPassword]=useState(''),[members,setMembers]=useState<Membership[]|null>(null),[busy,setBusy]=useState(false),[message,setMessage]=useState('');const session=useRef<{token:string;expires:number}|null>(null);const generation=useRef(0);
