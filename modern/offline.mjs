@@ -1,0 +1,8 @@
+import {readdirSync,readFileSync,writeFileSync} from 'node:fs';import {join} from 'node:path';import {createHash} from 'node:crypto';
+function walk(dir){return readdirSync(dir,{withFileTypes:true}).flatMap(e=>e.isDirectory()?walk(join(dir,e.name)):[join(dir,e.name)])}
+const paths=walk('dist').filter(p=>!p.includes('/.vite/')&&!p.endsWith('/sw.js')).sort();const hash=createHash('sha256');for(const p of paths)hash.update(p).update(readFileSync(p));const version=hash.digest('hex').slice(0,16);const files=paths.map(p=>'./'+p.slice(5).replaceAll('\\','/'));
+writeFileSync('dist/sw.js',`const CACHE='snd-noturno-modern-${version}',FILES=${JSON.stringify(files)};const ROOT=new URL('./',self.registration.scope),INDEX=new URL('index.html',ROOT).href;
+self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(FILES.map(p=>new Request(new URL(p,ROOT),{cache:'reload'})))).then(()=>self.skipWaiting())));
+self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('snd-noturno-')&&k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
+self.addEventListener('fetch',e=>{const u=new URL(e.request.url);if(e.request.method!=='GET'||u.origin!==ROOT.origin||!u.pathname.startsWith(ROOT.pathname))return;if(e.request.mode==='navigate'){e.respondWith(caches.open(CACHE).then(c=>c.match(INDEX)).then(r=>r||fetch(e.request)));return}e.respondWith(caches.open(CACHE).then(c=>c.match(e.request)).then(r=>r||fetch(e.request)))});
+`);
