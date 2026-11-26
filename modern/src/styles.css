@@ -1,0 +1,1 @@
+@import "tailwindcss" theme(static); @source "./main.tsx"; @source "./engine.js"; @layer base {button {cursor:pointer} }
