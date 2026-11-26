@@ -11,7 +11,7 @@ const saved="loadedRaw=raw;saveFailed=false;",restored="loadedRaw=raw;blocked=fa
 if(!engine.includes(saved)||!engine.includes(restored))throw Error('Persistência incompatível');
 engine=engine.replace(saved,saved+"journalCheckpoint(raw);").replace(restored,restored+"journalCheckpoint(raw);");
 engine="import {checkpoint,history} from './local-journal';\nimport {prevention} from './prevention.mjs';\nimport {encryptBackup,decryptBackup,digest} from './crypto-backup.mjs';\n"+engine;
-engine=engine.replaceAll('V2.1','V3.4');
+engine=engine.replaceAll('V2.1','V4.0');
 if(!engine.includes('let x=JSON.parse(await el.files[0].text());'))throw Error('Importação incompatível');
 engine=engine.replace('let x=JSON.parse(await el.files[0].text());','let x=JSON.parse(await el.files[0].text());if(x?.format===\'snd-backup-encrypted-v1\'){if(d.mode===\'importStaff\')throw Error(\'Use Restaurar backup.\');let password=prompt(\'Senha do backup criptografado:\');if(password===null)return;x=JSON.parse(await decryptBackup(x,password));}');
 const storageHook="refreshSaveState()}});function migrateSchedule18";
