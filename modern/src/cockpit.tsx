@@ -5,8 +5,8 @@ type Signal={id:string;n:number;affected:number;late:number;incident:number;open
 export type Snapshot={date:string;current:boolean;tasks:Task[];prevention?:{sample:number;signals:Signal[]};received:boolean;blocked:boolean;at:number};
 export function prioritize(tasks:Task[],now:number){return tasks.filter(t=>t.status!=='done').sort((a,b)=>{const rank=(t:Task)=>t.due<=now?(t.priority==='critica'?0:1):t.priority==='critica'&&t.due-now<=1800000?2:t.status==='pending'?3:4;return rank(a)-rank(b)||a.due-b.due})}
 export function Cockpit({active}:{active:string}){const [s,setS]=useState<Snapshot|null>(null);const [focus,setFocus]=useState(false);const [now,setNow]=useState(Date.now());
-useEffect(()=>{const receive=(e:Event)=>setS((e as CustomEvent<Snapshot>).detail);window.addEventListener('snd-cockpit',receive);return()=>window.removeEventListener('snd-cockpit',receive)},[]);
-useEffect(()=>{if(active!=='plantao')return;const timer=window.setInterval(()=>setNow(Date.now()),1000);return()=>window.clearInterval(timer)},[active]);
+useEffect(()=>{const receive=(e:Event)=>{const snapshot=(e as CustomEvent<Snapshot>).detail;setS(snapshot);setNow(snapshot.at)};window.addEventListener('snd-cockpit',receive);return()=>window.removeEventListener('snd-cockpit',receive)},[]);
+useEffect(()=>{if(active!=='plantao')return;const refresh=()=>{if(!document.hidden)setNow(Date.now())};refresh();const timer=window.setInterval(refresh,5000);document.addEventListener('visibilitychange',refresh);return()=>{window.clearInterval(timer);document.removeEventListener('visibilitychange',refresh)}},[active]);
 useEffect(()=>{document.body.classList.toggle('cockpit-focus',focus&&active==='plantao'&&!!s?.current);return()=>document.body.classList.remove('cockpit-focus')},[focus,active,s?.current]);
 const ordered=useMemo(()=>s?prioritize(s.tasks,now):[],[s,now]);if(active!=='plantao'||!s)return null;
 const next=ordered[0],done=s.tasks.length-ordered.length,late=ordered.filter(t=>t.due<=now),pending=ordered.filter(t=>t.status==='pending'),critical=late.filter(t=>t.priority==='critica'),soon=!!next&&next.due-now<=1800000;const urgent=!!next&&next.due<=now;
