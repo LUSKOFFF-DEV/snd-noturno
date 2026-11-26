@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "node prepare.mjs && tsc --noEmit && vite build"
+    "build": "node prepare.mjs && tsc --noEmit && vite build && node offline.mjs"
   },
   "dependencies": {
     "react": "^19.0.0",
